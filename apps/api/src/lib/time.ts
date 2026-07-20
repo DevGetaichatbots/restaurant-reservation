@@ -16,3 +16,25 @@
 export function normalizeTime(time: string): string {
   return time.length === 5 ? `${time}:00` : time;
 }
+
+/** Adds whole minutes to an "HH:MM" or "HH:MM:SS" time, returning "HH:MM:SS".
+ *  Does not wrap past midnight — see the note in slots.routes.ts on why
+ *  individual slots are assumed same-day. */
+export function addMinutes(time: string, minutes: number): string {
+  const [h, m, s] = normalizeTime(time).split(":").map(Number) as [number, number, number];
+  const totalMinutes = h * 60 + m + minutes;
+  const hh = Math.floor(totalMinutes / 60) % 24;
+  const mm = totalMinutes % 60;
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+/** Whether [aStart, aEnd) and [bStart, bEnd) overlap, using the same
+ *  half-open convention as the database's exclusion constraint (proposal
+ *  §06) — a booking ending exactly when another starts does not overlap it. */
+export function timeRangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
+  const a1 = normalizeTime(aStart);
+  const a2 = normalizeTime(aEnd);
+  const b1 = normalizeTime(bStart);
+  const b2 = normalizeTime(bEnd);
+  return a1 < b2 && a2 > b1;
+}
