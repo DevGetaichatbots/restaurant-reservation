@@ -1,14 +1,27 @@
-import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { createDatabase } from "./client.js";
+import postgres from "postgres";
 
 /**
- * Applies pending migrations, then exits.
+ * Migration runner.
  *
- * Run against the local database during development and as a release step
- * before the API starts in staging and production. Drizzle records which
- * migrations have already run, so this is safe to run repeatedly.
+ * Applies every .sql file in ./migrations in filename order, once each, inside
+ * a transaction. Applied files are recorded in `_migrations` so re-running is
+ * safe.
+ *
+ * Migrations are hand-written SQL rather than generated. Two things this schema
+ * depends on cannot be expressed through an ORM:
+ *
+ *   • a GENERATED column computing each booking's time range
+ *   • an EXCLUDE constraint using that range to make double-booking impossible
+ *
+ * Writing the SQL directly keeps those visible and reviewable in a pull
+ * request, which is exactly where a rule this important should be readable.
  */
+const migrationsDir = join(fileURLToPath(new URL(".", import.meta.url)), "..", "migrations");
+
 async function main() {
   const connectionString = process.env.DATABASE_URL;
 
@@ -18,18 +31,58 @@ async function main() {
   }
 
   const target = connectionString.includes("localhost") ? "local" : "remote";
-  console.log(`Running migrations against the ${target} database…`);
+  console.log(`Migrating the ${target} database…\n`);
 
-  const { db, close } = createDatabase(connectionString);
+  const sql = postgres(connectionString, {
+    max: 1,
+    ssl: connectionString.includes("localhost") ? false : "require",
+  });
 
   try {
-    await migrate(db, { migrationsFolder: "./migrations" });
-    console.log("Migrations applied.");
+    await sql`
+      CREATE TABLE IF NOT EXISTS _migrations (
+        filename    text PRIMARY KEY,
+        applied_at  timestamptz NOT NULL DEFAULT now()
+      )
+    `;
+
+    const applied = new Set(
+      (await sql<{ filename: string }[]>`SELECT filename FROM _migrations`).map(
+        (row) => row.filename,
+      ),
+    );
+
+    const files = (await readdir(migrationsDir)).filter((f) => f.endsWith(".sql")).sort();
+
+    let count = 0;
+
+    for (const filename of files) {
+      if (applied.has(filename)) {
+        console.log(`  ·  ${filename} (already applied)`);
+        continue;
+      }
+
+      const contents = await readFile(join(migrationsDir, filename), "utf8");
+
+      // Each migration is one transaction: it either lands whole or not at all,
+      // so a failure halfway can never leave a half-built schema behind.
+      await sql.begin(async (tx) => {
+        await tx.unsafe(contents);
+        await tx`INSERT INTO _migrations (filename) VALUES (${filename})`;
+      });
+
+      console.log(`  ✓  ${filename}`);
+      count += 1;
+    }
+
+    console.log(
+      count === 0 ? "\nNothing to do — schema is up to date." : `\nApplied ${count} migration(s).`,
+    );
   } catch (error) {
-    console.error("Migration failed:", error);
+    console.error("\nMigration failed:\n", error);
     process.exitCode = 1;
   } finally {
-    await close();
+    await sql.end();
   }
 }
 
