@@ -28,6 +28,9 @@ Thumbs.db
 !.vscode/extensions.json
 .idea/
 
+# Claude Code — accumulates machine-specific tool permissions, not project config
+.claude/
+
 # test output
 coverage/
 playwright-report/
