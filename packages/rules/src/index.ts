@@ -2,25 +2,32 @@
  * The booking rules, as pure functions.
  *
  * Pure means: given the same inputs they always return the same answer, they
- * touch no database and no clock of their own. That makes every rule directly
- * unit-testable at its boundaries — the minute either side of a cutoff, the
- * exact seat count, the first blocked date — which is how we know they are
- * right before any interface exists.
+ * touch no database and no clock of their own — every function that needs
+ * "now" takes it as a parameter with a real default, so tests can pin exact
+ * boundaries instead of racing the system clock.
  *
- * The API is the only thing that enforces them. The front-ends import the same
- * functions to preview an outcome and grey out what would be refused, but a
- * browser's opinion is never trusted: everything is re-checked server-side
- * inside the write transaction.
+ * The API is the only thing that *enforces* these — see apps/api's write path,
+ * which re-runs every check inside the transaction regardless of what the
+ * client already validated. The front-ends import the same functions purely
+ * to preview an outcome and grey out what would be refused — a browser's
+ * opinion is never trusted on its own.
  *
- * To implement in Sprint 1:
- *   • minimum / maximum advance booking window
- *   • cancellation time limit
- *   • max guests per booking
- *   • same-day booking allowed
- *   • contact information required
- *   • booking mode routing → confirmed | requested | waitlisted   (§07)
- *   • overflow allowance and the capacity meter                   (§07)
- *   • request expiry, including the 20-minute floor               (§13 D-11)
+ * Status:
+ *   ✅ advance-window     — rules 1, 2, and same-day (rule 4)
+ *   ✅ cancellation       — rule 3 (needs the manage-booking page, D-01)
+ *   ✅ party-size         — rule 5, plus table-capacity
+ *   ✅ contact-info       — rule 6
+ *   ✅ booking-mode       — replaces rule 7; the confirmed/requested/
+ *                           waitlisted/unavailable decision from §07
+ *   ✅ request-expiry     — D-11, including the floor that fixes the
+ *                           tight-slot edge case
  */
 
-export {};
+export * from "./types.js";
+export * from "./clock.js";
+export * from "./advance-window.js";
+export * from "./cancellation.js";
+export * from "./party-size.js";
+export * from "./contact-info.js";
+export * from "./booking-mode.js";
+export * from "./request-expiry.js";
