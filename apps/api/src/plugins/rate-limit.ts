@@ -1,6 +1,7 @@
 import rateLimit from "@fastify/rate-limit";
-import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
+
+import type { App } from "../types/app.js";
 
 /**
  * Request throttling.
@@ -12,7 +13,7 @@ import fp from "fastify-plugin";
  * These are global defaults. Individual routes tighten them further; creating a
  * reservation is far stricter than reading availability.
  */
-export default fp(async function rateLimitPlugin(app: FastifyInstance) {
+export default fp(async function rateLimitPlugin(app: App) {
   await app.register(rateLimit, {
     global: true,
     max: 100,

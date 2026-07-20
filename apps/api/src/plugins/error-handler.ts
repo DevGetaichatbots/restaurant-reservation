@@ -1,9 +1,9 @@
-import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
 import { ZodError } from "zod";
 
 import { AppError } from "../lib/errors.js";
 import { isProduction } from "../config/env.js";
+import type { App } from "../types/app.js";
 
 /**
  * The single place an error becomes an HTTP response.
@@ -15,7 +15,7 @@ import { isProduction } from "../config/env.js";
  * Response shape:
  *   { error: { code, message, details? } }
  */
-export default fp(async function errorHandlerPlugin(app: FastifyInstance) {
+export default fp(async function errorHandlerPlugin(app: App) {
   app.setErrorHandler((error, request, reply) => {
     // Request body or query failed a Zod schema.
     if (error instanceof ZodError) {
@@ -53,12 +53,18 @@ export default fp(async function errorHandlerPlugin(app: FastifyInstance) {
       });
     }
 
-    // 23505 = unique_violation, most often a replayed idempotency key.
+    // 23505 = unique_violation. Which constraint fired decides the message —
+    // a duplicate table name and a replayed idempotency key are both
+    // "already exists" at the database level but mean very different things
+    // to the person reading the response.
     if (hasPostgresCode(error, "23505")) {
+      const constraint = getPostgresConstraint(error);
+      const known = constraint ? DUPLICATE_MESSAGES[constraint] : undefined;
+
       return reply.status(409).send({
         error: {
           code: "DUPLICATE",
-          message: "This booking has already been submitted.",
+          message: known ?? "That already exists.",
         },
       });
     }
@@ -96,3 +102,25 @@ function hasPostgresCode(error: unknown, code: string): boolean {
     (error as { code?: unknown }).code === code
   );
 }
+
+function getPostgresConstraint(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  return (error as { constraint_name?: string }).constraint_name;
+}
+
+/**
+ * Human messages for the unique constraints declared across packages/db's
+ * migrations. Add an entry here whenever a new UNIQUE constraint is added —
+ * without one, that constraint still works, it just falls back to the
+ * generic "That already exists."
+ */
+const DUPLICATE_MESSAGES: Record<string, string> = {
+  reservations_idempotency: "This booking has already been submitted.",
+  tables_unique_name_per_restaurant: "A table with that name already exists.",
+  staff_accounts_unique_email: "An account with that email already exists.",
+  availability_one_row_per_day: "Opening hours for that day are already set.",
+  time_slots_unique_start: "A time slot starting at that time already exists.",
+  blocked_dates_unique: "That date is already blocked.",
+  guests_unique_phone: "A guest with that phone number already exists.",
+  guests_unique_email: "A guest with that email already exists.",
+};

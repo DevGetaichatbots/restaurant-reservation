@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { sql } from "drizzle-orm";
 
 import { createDatabase } from "../client.js";
@@ -6,6 +7,7 @@ import {
   blockedDates,
   reservationRules,
   restaurant,
+  staffAccounts,
   tables,
   timeSlots,
 } from "../schema/index.js";
@@ -44,7 +46,7 @@ async function main() {
     await db.execute(sql`
       TRUNCATE restaurant, tables, availability_settings, time_slots,
                blocked_dates, reservation_rules, guests, reservations,
-               reservation_events
+               reservation_events, staff_accounts
       RESTART IDENTITY CASCADE
     `);
 
@@ -131,6 +133,30 @@ async function main() {
       reason: "Private event",
     });
     console.log(`  ✓  1 blocked date`);
+
+    // ── Staff accounts — interim auth, see apps/api/src/lib/auth.ts ────────────
+    // Dev-only credentials, printed to the console rather than committed
+    // anywhere. Never seeded against a non-local database (guarded above).
+    const devPassword = "dev-password-123";
+    const passwordHash = await bcrypt.hash(devPassword, 12);
+
+    await db.insert(staffAccounts).values([
+      {
+        restaurantId: bistro.id,
+        name: "Owner",
+        email: "owner@italianbistro.example",
+        passwordHash,
+        role: "admin",
+      },
+      {
+        restaurantId: bistro.id,
+        name: "Front of House",
+        email: "staff@italianbistro.example",
+        passwordHash,
+        role: "staff",
+      },
+    ]);
+    console.log(`  ✓  2 staff accounts (admin + staff, password: ${devPassword})`);
 
     console.log("\nSeed complete.");
   } catch (error) {

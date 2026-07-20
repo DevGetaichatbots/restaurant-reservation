@@ -12,9 +12,8 @@
  *   M5  guests                                              ✅
  *   M6  reservations + partial exclusion constraint         ✅
  *   M7  reservation_events + NOTIFY / updated_at triggers   ✅
- *
- * Next:
- *   M8  seed data (Tables 1–7, opening hours, slots, rules)
+ *   M8  seed data (Tables 1–7, opening hours, slots, rules) ✅
+ *   M9  staff_accounts — interim auth until Cognito/AWS     ✅
  */
 
 export * from "./enums.js";
@@ -24,3 +23,4 @@ export * from "./availability.js";
 export * from "./rules.js";
 export * from "./guests.js";
 export * from "./reservations.js";
+export * from "./staff-accounts.js";

@@ -1,8 +1,9 @@
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
-import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
 import { jsonSchemaTransform } from "fastify-type-provider-zod";
+
+import type { App } from "../types/app.js";
 
 /**
  * API documentation, generated from the route schemas themselves.
@@ -14,7 +15,7 @@ import { jsonSchemaTransform } from "fastify-type-provider-zod";
  *
  * Browsable at /docs while the server is running.
  */
-export default fp(async function swaggerPlugin(app: FastifyInstance) {
+export default fp(async function swaggerPlugin(app: App) {
   await app.register(swagger, {
     openapi: {
       info: {

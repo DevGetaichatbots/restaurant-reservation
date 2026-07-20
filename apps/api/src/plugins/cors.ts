@@ -1,8 +1,8 @@
 import cors from "@fastify/cors";
-import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
 
 import { env } from "../config/env.js";
+import type { App } from "../types/app.js";
 
 /**
  * Cross-origin access.
@@ -12,7 +12,7 @@ import { env } from "../config/env.js";
  * CORS_ORIGINS and nothing else — a wildcard here would let any website on the
  * internet call the API with a logged-in admin's cookies attached.
  */
-export default fp(async function corsPlugin(app: FastifyInstance) {
+export default fp(async function corsPlugin(app: App) {
   await app.register(cors, {
     origin: env.CORS_ORIGINS,
     credentials: true,

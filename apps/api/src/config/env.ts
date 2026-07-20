@@ -42,6 +42,21 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter(Boolean),
     ),
+
+  /**
+   * Signs and verifies admin/staff login tokens.
+   *
+   * Interim auth — proposal §03 commits to Amazon Cognito, which needs an AWS
+   * account the client has not yet provided (see project notes). This secret
+   * disappears entirely once that migration happens; nothing about it is
+   * meant to be long-lived infrastructure.
+   *
+   * No default in production: a guessable or shared signing secret lets
+   * anyone mint an admin token. A default is allowed in development only, so
+   * a fresh clone runs immediately without every contributor generating their
+   * own — the built-in value is intentionally useless anywhere but a laptop.
+   */
+  JWT_SECRET: z.string().min(1).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -55,7 +70,25 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-export const env = parsed.data;
+const data = parsed.data;
+
+if (!data.JWT_SECRET) {
+  if (data.NODE_ENV === "production") {
+    console.error(
+      "\nJWT_SECRET is required in production. Generate one with:\n\n  node -e \"console.log(require('crypto').randomBytes(48).toString('hex'))\"\n\nand set it in the hosting platform's environment variables.\n",
+    );
+    process.exit(1);
+  }
+
+  console.warn(
+    "\n⚠  JWT_SECRET not set — using an insecure development-only default.\n   Never deploy with this default; production requires a real JWT_SECRET.\n",
+  );
+}
+
+export const env = {
+  ...data,
+  JWT_SECRET: data.JWT_SECRET ?? "insecure-development-only-secret-do-not-deploy",
+};
 export type Env = typeof env;
 
 export const isProduction = env.NODE_ENV === "production";

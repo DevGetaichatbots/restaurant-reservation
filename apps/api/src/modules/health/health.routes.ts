@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
-import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+
+import type { App } from "../../types/app.js";
 
 /**
  * Health checks.
@@ -16,7 +17,7 @@ import { z } from "zod";
  * A process can be running while the database is unreachable. Only the second
  * check would notice, and only it should gate real traffic.
  */
-export default async function healthRoutes(app: FastifyInstance) {
+export default async function healthRoutes(app: App) {
   app.get(
     "/",
     {
