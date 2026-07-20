@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:developers.google.com)",
+      "Skill(artifact-design)",
+      "Skill(artifact-design:*)",
+      "Bash(pnpm -v)",
+      "Bash(echo \"pnpm: $\\(pnpm -v 2>/dev/null || echo MISSING\\)\")",
+      "Bash(npm -v)",
+      "Bash(echo \"npm:  $\\(npm -v 2>/dev/null || echo MISSING\\)\")",
+      "Bash(git --version)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm --filter @rms/api add pino-pretty)",
+      "Bash(pnpm --filter @rms/api exec tsc --noEmit)",
+      "Bash(pnpm --filter @rms/api add drizzle-orm)",
+      "Bash(timeout 20 node --experimental-strip-types src/server.ts)",
+      "Bash(echo \"--- exit: $? \\(env validation working if it complained about DATABASE_URL\\) ---\")",
+      "Bash(timeout 25 npx tsx src/server.ts)",
+      "Bash(timeout 25 npx tsx \"d:/Restaurant_Managment_System/apps/api/src/server.ts\")",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git -c user.email=dev@getaichatbots.com -c user.name=Dev commit -q -m ' *)"
+    ]
+  }
+}
