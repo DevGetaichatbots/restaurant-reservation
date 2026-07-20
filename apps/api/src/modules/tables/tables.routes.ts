@@ -5,11 +5,12 @@ import {
   updateTableSchema,
   uuidSchema,
 } from "@rms/contracts";
-import { reservations, restaurant, tables } from "@rms/db";
+import { reservations, tables } from "@rms/db";
 import { and, count, eq, gt, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 
 import { AppError, NotFoundError } from "../../lib/errors.js";
+import { requireSingleRestaurant } from "../../lib/restaurant-context.js";
 import { isoOrNull, iso } from "../../lib/serialize.js";
 import type { App } from "../../types/app.js";
 
@@ -230,24 +231,4 @@ function serializeTable(table: typeof tables.$inferSelect) {
     createdAt: iso(table.createdAt),
     updatedAt: iso(table.updatedAt),
   };
-}
-
-/**
- * Single-restaurant assumption, stated once.
- *
- * The schema supports multiple restaurants (every table carries a
- * restaurant_id), but this deployment serves exactly one — there is no
- * multi-tenant routing yet. Every module resolves it once at plugin
- * registration rather than repeating "the one restaurant row" logic per
- * handler; multi-tenancy later means changing this one function, not every
- * route in the API.
- */
-async function requireSingleRestaurant(app: App): Promise<string> {
-  const [row] = await app.db.select({ id: restaurant.id }).from(restaurant).limit(1);
-  if (!row) {
-    throw new Error(
-      "No restaurant row exists. Run `pnpm db:seed` (or create one via the admin setup flow) before starting the API.",
-    );
-  }
-  return row.id;
 }
