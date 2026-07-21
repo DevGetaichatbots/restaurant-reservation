@@ -13,7 +13,7 @@
  * happens automatically from then on.
  */
 
-export * from "./types.js";
-export * from "./client.js";
-export * from "./react.js";
-export * from "./query-integration.js";
+export * from "./types";
+export * from "./client";
+export * from "./react";
+export * from "./query-integration";

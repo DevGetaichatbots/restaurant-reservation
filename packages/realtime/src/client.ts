@@ -1,4 +1,4 @@
-import type { ReservationChangedPayload } from "./types.js";
+import type { ReservationChangedPayload } from "./types";
 
 export type ReservationEventListener = (payload: ReservationChangedPayload) => void;
 

@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-import { useRealtimeConnection } from "./react.js";
-import type { ReservationChangedPayload } from "./types.js";
+import { useRealtimeConnection } from "./react";
+import type { ReservationChangedPayload } from "./types";
 
 /**
  * The query-key convention every front-end module reading reservation data

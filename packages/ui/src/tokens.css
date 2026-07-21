@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════════════════════════════════════
+ * THE ONLY FILE A NEW RESTAURANT'S BRAND SHOULD TOUCH.
+ *
+ * Every value below is a raw color. Nothing here is Tailwind-specific and
+ * nothing elsewhere in the three apps references a hex code directly — every
+ * component reaches these through the semantic layer in theme.css instead.
+ * Re-brand a client by editing the values in this file alone; theme.css and
+ * every component built on top of it never change.
+ *
+ * Two groups:
+ *   BRAND    — the restaurant's identity. Change these for a new client.
+ *   NEUTRAL  — the paper/ink scale the brand sits on, light and dark. These
+ *              rarely need to change, but a client with a strong existing
+ *              identity (a very cool, minimal brand; a very dark, moody one)
+ *              may want a different neutral undertone than warm cream.
+ *
+ * Current values: an Italian trattoria. Research grounding this palette —
+ * warm reds and olive greens read as authentic and appetite-stimulating for
+ * Italian cuisine specifically (tomato, basil, wheat) — sits in the project
+ * proposal's design notes. Three brand hues carry equal weight (terracotta
+ * for commitment/action, olive for secondary/calm, gold for highlight)
+ * rather than a single accent against a neutral field, which is what keeps
+ * this from reading as the generic "cream + one accent" restaurant-site
+ * template.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── BRAND ── */
+  --brand-primary-h: 16;
+  --brand-primary-s: 74%;
+  --brand-primary-l: 40%;
+  --brand-primary: hsl(var(--brand-primary-h) var(--brand-primary-s) var(--brand-primary-l));
+  --brand-primary-hover: hsl(var(--brand-primary-h) var(--brand-primary-s) 33%);
+  --brand-primary-active: hsl(var(--brand-primary-h) var(--brand-primary-s) 28%);
+
+  --brand-secondary-h: 82;
+  --brand-secondary-s: 24%;
+  --brand-secondary-l: 35%;
+  --brand-secondary: hsl(var(--brand-secondary-h) var(--brand-secondary-s) var(--brand-secondary-l));
+  --brand-secondary-hover: hsl(var(--brand-secondary-h) var(--brand-secondary-s) 28%);
+
+  --brand-accent-h: 42;
+  --brand-accent-s: 58%;
+  --brand-accent-l: 52%;
+  --brand-accent: hsl(var(--brand-accent-h) var(--brand-accent-s) var(--brand-accent-l));
+
+  /* Applied to text/icons sitting directly on a brand-primary fill. */
+  --brand-primary-contrast: hsl(40 45% 97%);
+  --brand-accent-contrast: hsl(30 40% 12%);
+
+  /* ── NEUTRAL — light ── */
+  --rms-paper: hsl(38 42% 97%);
+  --rms-paper-2: hsl(36 32% 93%);
+  --rms-paper-3: hsl(34 26% 88%);
+  --rms-ink: hsl(26 24% 14%);
+  --rms-ink-2: hsl(28 14% 34%);
+  --rms-ink-3: hsl(28 10% 52%);
+  --rms-rule: hsl(32 22% 82%);
+  --shadow-color: 26 30% 20%;
+
+  /* ── SEMANTIC — status, distinct from the three brand hues on purpose
+     (proposal note: semantic color is never the accent) ── */
+  --rms-success: hsl(101 26% 34%);
+  --rms-success-subtle: hsl(101 30% 93%);
+  --rms-danger: hsl(350 58% 42%);
+  --rms-danger-subtle: hsl(350 55% 95%);
+  --rms-warning: hsl(38 68% 40%);
+  --rms-warning-subtle: hsl(42 65% 92%);
+  --rms-info: hsl(202 32% 38%);
+  --rms-info-subtle: hsl(202 35% 93%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand-primary-l: 54%;
+    --brand-primary-hover: hsl(var(--brand-primary-h) var(--brand-primary-s) 61%);
+    --brand-primary-active: hsl(var(--brand-primary-h) var(--brand-primary-s) 67%);
+    --brand-secondary-l: 58%;
+    --brand-secondary-hover: hsl(var(--brand-secondary-h) var(--brand-secondary-s) 65%);
+    --brand-accent-l: 62%;
+    --brand-primary-contrast: hsl(30 40% 10%);
+
+    --rms-paper: hsl(24 20% 8%);
+    --rms-paper-2: hsl(24 18% 12%);
+    --rms-paper-3: hsl(24 16% 17%);
+    --rms-ink: hsl(36 30% 93%);
+    --rms-ink-2: hsl(32 16% 72%);
+    --rms-ink-3: hsl(30 10% 52%);
+    --rms-rule: hsl(26 16% 24%);
+    --shadow-color: 0 0% 0%;
+
+    --rms-success: hsl(101 30% 62%);
+    --rms-success-subtle: hsl(101 24% 14%);
+    --rms-danger: hsl(350 62% 68%);
+    --rms-danger-subtle: hsl(350 40% 16%);
+    --rms-warning: hsl(38 70% 62%);
+    --rms-warning-subtle: hsl(40 45% 14%);
+    --rms-info: hsl(202 40% 66%);
+    --rms-info-subtle: hsl(202 30% 14%);
+  }
+}
+
+/* The viewer's own toggle (every app ships one, see ThemeToggle) stamps
+   data-theme on <html> and must win in both directions over the OS media
+   query above. */
+:root[data-theme="dark"] {
+  --brand-primary-l: 54%;
+  --brand-primary-hover: hsl(var(--brand-primary-h) var(--brand-primary-s) 61%);
+  --brand-primary-active: hsl(var(--brand-primary-h) var(--brand-primary-s) 67%);
+  --brand-secondary-l: 58%;
+  --brand-secondary-hover: hsl(var(--brand-secondary-h) var(--brand-secondary-s) 65%);
+  --brand-accent-l: 62%;
+  --brand-primary-contrast: hsl(30 40% 10%);
+
+  --rms-paper: hsl(24 20% 8%);
+  --rms-paper-2: hsl(24 18% 12%);
+  --rms-paper-3: hsl(24 16% 17%);
+  --rms-ink: hsl(36 30% 93%);
+  --rms-ink-2: hsl(32 16% 72%);
+  --rms-ink-3: hsl(30 10% 52%);
+  --rms-rule: hsl(26 16% 24%);
+  --shadow-color: 0 0% 0%;
+
+  --rms-success: hsl(101 30% 62%);
+  --rms-success-subtle: hsl(101 24% 14%);
+  --rms-danger: hsl(350 62% 68%);
+  --rms-danger-subtle: hsl(350 40% 16%);
+  --rms-warning: hsl(38 70% 62%);
+  --rms-warning-subtle: hsl(40 45% 14%);
+  --rms-info: hsl(202 40% 66%);
+  --rms-info-subtle: hsl(202 30% 14%);
+}
+
+:root[data-theme="light"] {
+  --brand-primary-l: 40%;
+  --brand-primary-hover: hsl(var(--brand-primary-h) var(--brand-primary-s) 33%);
+  --brand-primary-active: hsl(var(--brand-primary-h) var(--brand-primary-s) 28%);
+  --brand-secondary-l: 35%;
+  --brand-secondary-hover: hsl(var(--brand-secondary-h) var(--brand-secondary-s) 28%);
+  --brand-accent-l: 52%;
+  --brand-primary-contrast: hsl(40 45% 97%);
+
+  --rms-paper: hsl(38 42% 97%);
+  --rms-paper-2: hsl(36 32% 93%);
+  --rms-paper-3: hsl(34 26% 88%);
+  --rms-ink: hsl(26 24% 14%);
+  --rms-ink-2: hsl(28 14% 34%);
+  --rms-ink-3: hsl(28 10% 52%);
+  --rms-rule: hsl(32 22% 82%);
+  --shadow-color: 26 30% 20%;
+
+  --rms-success: hsl(101 26% 34%);
+  --rms-success-subtle: hsl(101 30% 93%);
+  --rms-danger: hsl(350 58% 42%);
+  --rms-danger-subtle: hsl(350 55% 95%);
+  --rms-warning: hsl(38 68% 40%);
+  --rms-warning-subtle: hsl(42 65% 92%);
+  --rms-info: hsl(202 32% 38%);
+  --rms-info-subtle: hsl(202 35% 93%);
+}

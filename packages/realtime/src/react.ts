@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { RealtimeClient, type ReservationEventListener } from "./client.js";
+import { RealtimeClient, type ReservationEventListener } from "./client";
 
 /**
  * Subscribes a component to the live event stream for its lifetime.

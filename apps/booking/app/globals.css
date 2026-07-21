@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@import "@rms/ui/theme.css";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--rms-paper);
+    color: var(--rms-ink);
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background-color: var(--brand-accent);
+    color: var(--brand-accent-contrast);
+  }
+}
+
+@layer utilities {
+  /* A very quiet linen-grain texture on paper surfaces — the one deliberate
+     departure from a flat corporate-SaaS field, standing in for the
+     "handwritten trattoria ledger" reference without literal imagery, which
+     would cost the mobile performance budget this page is held to. */
+  .texture-paper {
+    background-image: radial-gradient(circle at 1px 1px, hsl(var(--shadow-color) / 0.05) 1px, transparent 0);
+    background-size: 18px 18px;
+  }
+}

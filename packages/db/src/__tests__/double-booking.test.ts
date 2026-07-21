@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createDatabase, type Database } from "../client.js";
 import { reservations, restaurant, tables } from "../schema/index.js";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 /**
  * The guarantee, tested literally.
@@ -57,6 +57,18 @@ describeIfDb("double-booking is impossible", () => {
     await db.delete(reservations).where(eq(reservations.restaurantId, restaurantId));
   });
 
+  /**
+   * Every assertion below counts rows scoped to this test's own restaurantId
+   * — this database is shared with manual/UI verification runs during
+   * development, which leave their own reservations behind against the seed
+   * restaurant. An unscoped `select().from(reservations)` would count those
+   * too and fail for reasons that have nothing to do with the constraint
+   * being tested.
+   */
+  function ourReservations() {
+    return db.select().from(reservations).where(eq(reservations.restaurantId, restaurantId));
+  }
+
   /** One confirmed booking for our table at a given time. */
   function booking(time: string, overrides: Record<string, unknown> = {}) {
     return {
@@ -77,7 +89,7 @@ describeIfDb("double-booking is impossible", () => {
 
     await expect(db.insert(reservations).values(booking("19:00"))).rejects.toThrow();
 
-    const rows = await db.select().from(reservations);
+    const rows = await ourReservations();
     expect(rows).toHaveLength(1);
   });
 
@@ -87,7 +99,7 @@ describeIfDb("double-booking is impossible", () => {
 
     await expect(db.insert(reservations).values(booking("20:00"))).rejects.toThrow();
 
-    expect(await db.select().from(reservations)).toHaveLength(1);
+    expect(await ourReservations()).toHaveLength(1);
   });
 
   it("allows a booking that starts exactly when the previous ends", async () => {
@@ -97,7 +109,7 @@ describeIfDb("double-booking is impossible", () => {
     await db.insert(reservations).values(booking("19:00"));
     await db.insert(reservations).values(booking("20:30"));
 
-    expect(await db.select().from(reservations)).toHaveLength(2);
+    expect(await ourReservations()).toHaveLength(2);
   });
 
   it("survives 100 simultaneous bookings — exactly one wins", async () => {
@@ -119,7 +131,7 @@ describeIfDb("double-booking is impossible", () => {
 
     expect(won).toBe(1);
     expect(lost).toBe(99);
-    expect(await db.select().from(reservations)).toHaveLength(1);
+    expect(await ourReservations()).toHaveLength(1);
   });
 
   it("does NOT block un-assigned requests — flexible capacity coexists", async () => {
@@ -143,7 +155,7 @@ describeIfDb("double-booking is impossible", () => {
     const rows = await db
       .select()
       .from(reservations)
-      .where(eq(reservations.status, "requested"));
+      .where(and(eq(reservations.restaurantId, restaurantId), eq(reservations.status, "requested")));
     expect(rows).toHaveLength(5);
   });
 
@@ -165,7 +177,7 @@ describeIfDb("double-booking is impossible", () => {
     const live = await db
       .select()
       .from(reservations)
-      .where(sql`${reservations.status} <> 'cancelled'`);
+      .where(and(eq(reservations.restaurantId, restaurantId), ne(reservations.status, "cancelled")));
     expect(live).toHaveLength(1);
   });
 });
