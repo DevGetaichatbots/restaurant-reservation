@@ -1,2 +1,2 @@
-export { createDatabase, type Database } from "./client.js";
+export { createDatabase, type Database, type PgClient } from "./client.js";
 export * from "./schema/index.js";

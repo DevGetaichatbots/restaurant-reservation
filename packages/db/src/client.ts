@@ -5,6 +5,11 @@ import * as schema from "./schema/index.js";
 
 export type Database = ReturnType<typeof drizzle<typeof schema>>;
 
+/** The raw postgres.js client. Exported because LISTEN/NOTIFY has no
+ *  query-builder equivalent in Drizzle — the realtime layer calls
+ *  `.listen()` on this directly rather than through `Database`. */
+export type PgClient = ReturnType<typeof postgres>;
+
 /**
  * Opens the connection pool.
  *

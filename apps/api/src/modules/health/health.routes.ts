@@ -45,6 +45,23 @@ export default async function healthRoutes(app: App) {
   );
 
   app.get(
+    "/realtime",
+    {
+      schema: {
+        tags: ["health"],
+        summary: "Live-event stream status",
+        response: {
+          200: z.object({
+            status: z.literal("ok"),
+            connectedClients: z.number().int(),
+          }),
+        },
+      },
+    },
+    async () => ({ status: "ok" as const, connectedClients: app.realtime.subscriberCount() }),
+  );
+
+  app.get(
     "/ready",
     {
       schema: {
