@@ -197,7 +197,10 @@ export default async function tablesRoutes(app: App) {
         );
       }
 
-      await app.db.update(tables).set({ archivedAt: new Date() }).where(eq(tables.id, existing.id));
+      // status also flips to inactive here — availability.routes.ts's guest-
+      // facing table map filters on status alone (not archivedAt), so an
+      // archived table left "active" would still show up as bookable there.
+      await app.db.update(tables).set({ archivedAt: new Date(), status: "inactive" }).where(eq(tables.id, existing.id));
 
       reply.status(204);
     },

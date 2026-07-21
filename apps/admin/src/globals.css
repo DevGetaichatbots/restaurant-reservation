@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@import "@rms/ui/theme.css";
+
+@theme inline {
+  --font-display: "Fraunces", serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--rms-paper-2);
+    color: var(--rms-ink);
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background-color: var(--brand-accent);
+    color: var(--brand-accent-contrast);
+  }
+}
