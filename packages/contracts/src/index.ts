@@ -29,3 +29,4 @@ export * from "./tables.js";
 export * from "./settings.js";
 export * from "./availability.js";
 export * from "./reservations.js";
+export * from "./requests.js";

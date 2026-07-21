@@ -25,12 +25,12 @@ import {
   decideBookingOutcome,
   type ReservationRulesConfig,
 } from "@rms/rules";
-import { and, desc, eq, gte, ilike, inArray, lte, or } from "drizzle-orm";
+import { and, eq, gte, ilike, lte, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { AppError, NotFoundError, RuleViolationError } from "../../lib/errors.js";
+import { findReservationOr404, serializeReservation, withTableName } from "../../lib/reservation-helpers.js";
 import { requireSingleRestaurant } from "../../lib/restaurant-context.js";
-import { iso, isoOrNull } from "../../lib/serialize.js";
 import { normalizeTime } from "../../lib/time.js";
 import type { App } from "../../types/app.js";
 
@@ -374,47 +374,9 @@ function messageFor(status: string): string {
   }
 }
 
-async function findReservationOr404(app: App, id: string, restaurantId: string) {
-  const [row] = await app.db
-    .select()
-    .from(reservations)
-    .where(and(eq(reservations.id, id), eq(reservations.restaurantId, restaurantId)))
-    .limit(1);
-  if (!row) throw new NotFoundError("Reservation");
-  return row;
-}
-
 async function toGuestView(app: App, reservation: typeof reservations.$inferSelect) {
-  const [tableRow] = reservation.tableId
-    ? await app.db.select({ tableName: tables.tableName }).from(tables).where(eq(tables.id, reservation.tableId)).limit(1)
-    : [undefined];
-  const { notes: _notes, ...rest } = serializeReservation(reservation, tableRow?.tableName ?? null);
+  const { notes: _notes, ...rest } = await withTableName(app, reservation);
   return rest;
-}
-
-function serializeReservation(row: typeof reservations.$inferSelect, tableName: string | null) {
-  return {
-    id: row.id,
-    tableId: row.tableId,
-    tableName,
-    guestName: row.guestName,
-    guestPhone: row.guestPhone,
-    guestEmail: row.guestEmail,
-    partySize: row.partySize,
-    reservationDate: row.reservationDate,
-    reservationTime: row.reservationTime,
-    durationMinutes: row.durationMinutes,
-    status: row.status,
-    isOverflow: row.isOverflow,
-    marketingOptIn: row.marketingOptIn,
-    source: row.source,
-    requestedAt: iso(row.requestedAt),
-    expiresAt: isoOrNull(row.expiresAt),
-    decidedAt: isoOrNull(row.decidedAt),
-    notes: row.notes,
-    createdAt: iso(row.createdAt),
-    updatedAt: iso(row.updatedAt),
-  };
 }
 
 async function getDurationForTime(app: App, restaurantId: string, time: string): Promise<number> {

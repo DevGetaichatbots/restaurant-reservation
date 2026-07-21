@@ -39,6 +39,16 @@ export function nowIn(timezone: string): Temporal.ZonedDateTime {
   return Temporal.Now.zonedDateTimeISO(timezone);
 }
 
+/**
+ * Converts a stored instant — a `timestamptz` column read back as a JS
+ * `Date`, e.g. `requestedAt` or `expiresAt` — into the restaurant's local
+ * timezone, so it can be compared with `minutesBetween`/`isRequestUrgent`
+ * alongside values produced by `nowIn`.
+ */
+export function fromInstant(date: Date, timezone: string): Temporal.ZonedDateTime {
+  return Temporal.Instant.fromEpochMilliseconds(date.getTime()).toZonedDateTimeISO(timezone);
+}
+
 /** Converts a rule's { value, unit } pair into a Temporal.Duration. */
 export function toDuration(value: number, unit: TimeUnit): Temporal.Duration {
   return unit === "hours" ? Temporal.Duration.from({ hours: value }) : Temporal.Duration.from({ days: value });
