@@ -1,15 +1,36 @@
 import type {
   AcceptRequestBody,
+  BlockedDateDto,
   CalendarDay,
+  CreateBlockedDateRequest,
+  CreateBlockedRangeRequest,
   CreateReservationRequest,
   CreateReservationResponse,
+  CreateTableRequest,
+  CreateTimeSlotRequest,
+  DayHours,
+  GuestDetail,
+  GuestDto,
+  ListGuestsQuery,
   LoginRequest,
   LoginResponse,
   PublicRestaurant,
+  ReportsSummary,
   RequestQueueItem,
   ReservationDto,
+  ReservationRulesDto,
+  RestaurantDto,
+  SetHoursRequest,
   SlotAvailability,
   TableAvailability,
+  TableDto,
+  TimeSlotDto,
+  UpdateGuestRequest,
+  UpdateReservationRulesRequest,
+  UpdateReservationRulesResponse,
+  UpdateRestaurantRequest,
+  UpdateTableRequest,
+  UpdateTimeSlotRequest,
 } from "@rms/contracts";
 
 import { ApiClientError } from "./error";
@@ -55,7 +76,7 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
     return json as T;
   }
 
-  function qs(params: Record<string, string | number | undefined>): string {
+  function qs(params: Record<string, string | number | boolean | undefined>): string {
     const search = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined) search.set(key, String(value));
@@ -111,6 +132,86 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
       request<ReservationDto>(`/requests/${id}/accept-overflow`, { method: "POST" }),
 
     declineRequest: (id: string) => request<ReservationDto>(`/requests/${id}/decline`, { method: "POST" }),
+
+    // ── Tables ──────────────────────────────────────────────────────────────
+    listTables: (params: { status?: string; location?: string; includeArchived?: boolean } = {}) =>
+      request<(TableDto & { upcomingReservations: number })[]>(`/tables${qs(params)}`),
+
+    getTable: (id: string) => request<TableDto & { upcomingReservations: number }>(`/tables/${id}`),
+
+    createTable: (body: CreateTableRequest) =>
+      request<TableDto>("/tables", { method: "POST", body: JSON.stringify(body) }),
+
+    updateTable: (id: string, body: UpdateTableRequest, opts: { force?: boolean } = {}) =>
+      request<TableDto>(`/tables/${id}${qs({ force: opts.force })}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+
+    deleteTable: (id: string) => request<void>(`/tables/${id}`, { method: "DELETE" }),
+
+    // ── Settings: restaurant profile ──────────────────────────────────────
+    getRestaurantProfile: () => request<RestaurantDto>("/settings/restaurant"),
+
+    updateRestaurantProfile: (body: UpdateRestaurantRequest) =>
+      request<RestaurantDto>("/settings/restaurant", { method: "PATCH", body: JSON.stringify(body) }),
+
+    // ── Settings: opening hours ────────────────────────────────────────────
+    getHours: () => request<DayHours[]>("/settings/hours"),
+
+    setHours: (body: SetHoursRequest) =>
+      request<{
+        days: DayHours[];
+        affectedReservations: { id: string; guestName: string; dayOfWeek: number; reservationDate: string; reservationTime: string }[];
+      }>("/settings/hours", { method: "PUT", body: JSON.stringify(body) }),
+
+    // ── Settings: time slots ───────────────────────────────────────────────
+    listSlots: () => request<TimeSlotDto[]>("/settings/slots"),
+
+    createSlot: (body: CreateTimeSlotRequest) =>
+      request<TimeSlotDto>("/settings/slots", { method: "POST", body: JSON.stringify(body) }),
+
+    updateSlot: (id: string, body: UpdateTimeSlotRequest) =>
+      request<TimeSlotDto>(`/settings/slots/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+
+    deleteSlot: (id: string) => request<void>(`/settings/slots/${id}`, { method: "DELETE" }),
+
+    // ── Settings: blocked dates ────────────────────────────────────────────
+    listBlockedDates: () => request<BlockedDateDto[]>("/settings/blocked-dates"),
+
+    blockDate: (body: CreateBlockedDateRequest) =>
+      request<BlockedDateDto & { affectedReservations: number }>("/settings/blocked-dates", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+
+    blockDateRange: (body: CreateBlockedRangeRequest) =>
+      request<{ created: BlockedDateDto[]; affectedReservations: number }>("/settings/blocked-dates/range", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+
+    unblockDate: (id: string) => request<void>(`/settings/blocked-dates/${id}`, { method: "DELETE" }),
+
+    // ── Settings: reservation rules ─────────────────────────────────────────
+    getRules: () => request<ReservationRulesDto>("/settings/rules"),
+
+    updateRules: (body: UpdateReservationRulesRequest) =>
+      request<UpdateReservationRulesResponse>("/settings/rules", { method: "PATCH", body: JSON.stringify(body) }),
+
+    // ── Guests / customers ──────────────────────────────────────────────────
+    listGuests: (params: ListGuestsQuery = {}) => request<GuestDto[]>(`/guests${qs(params)}`),
+
+    getGuest: (id: string) => request<GuestDetail>(`/guests/${id}`),
+
+    updateGuest: (id: string, body: UpdateGuestRequest) =>
+      request<GuestDto>(`/guests/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+
+    deleteGuest: (id: string) => request<void>(`/guests/${id}`, { method: "DELETE" }),
+
+    // ── Reports ─────────────────────────────────────────────────────────────
+    getReportsSummary: (from: string, to: string) =>
+      request<ReportsSummary>(`/reports/summary${qs({ from, to })}`),
   };
 }
 
