@@ -25,7 +25,7 @@ import {
   decideBookingOutcome,
   type ReservationRulesConfig,
 } from "@rms/rules";
-import { and, eq, gte, ilike, lte, or } from "drizzle-orm";
+import { and, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { AppError, NotFoundError, RuleViolationError } from "../../lib/errors.js";
@@ -498,6 +498,21 @@ async function transitionStatus(
       toStatus: updated.status,
       actor,
     });
+
+    // The Customers page (proposal §10) is only real if visit/no-show counts
+    // actually move — nothing else in the system ever touches these columns,
+    // so this is the one place they can go stale if forgotten.
+    if (updated.guestId && nextStatus === "completed") {
+      await tx
+        .update(guests)
+        .set({ visitCount: sql`${guests.visitCount} + 1`, lastVisitAt: new Date() })
+        .where(eq(guests.id, updated.guestId));
+    } else if (updated.guestId && nextStatus === "no_show") {
+      await tx
+        .update(guests)
+        .set({ noShowCount: sql`${guests.noShowCount} + 1` })
+        .where(eq(guests.id, updated.guestId));
+    }
 
     return updated;
   });

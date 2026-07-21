@@ -31,3 +31,5 @@ export * from "./availability.js";
 export * from "./reservations.js";
 export * from "./requests.js";
 export * from "./public-restaurant.js";
+export * from "./guests.js";
+export * from "./reports.js";
