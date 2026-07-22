@@ -103,9 +103,20 @@ export default async function reservationsRoutes(app: App) {
 
       // ── Rule checks — the authoritative pass. Whatever the guest UI
       // already validated is re-checked here from scratch. ──────────────────
-      assertRule(checkAdvanceWindow(target, rules, restaurantRow.timezone));
-      assertRule(checkSameDayAllowed(target, rules, restaurantRow.timezone));
-      assertRule(checkContactInformation({ phone: body.guestPhone, email: body.guestEmail }, rules));
+      //
+      // A walk-in is exempt from the three rules that only make sense for a
+      // guest planning ahead — advance window, same-day allowance, and
+      // required contact info — because a walk-in is, by definition,
+      // standing at the door right now with nothing to plan and no form to
+      // fill in (proposal §11's /walk-ins spec: "Name optional; phone
+      // optional — a walk-in isn't a form-filling moment"). Party size and
+      // the exclusion constraint itself still apply in full; a walk-in is
+      // not exempt from double-booking any more than any other source.
+      if (body.source !== "walk_in") {
+        assertRule(checkAdvanceWindow(target, rules, restaurantRow.timezone));
+        assertRule(checkSameDayAllowed(target, rules, restaurantRow.timezone));
+        assertRule(checkContactInformation({ phone: body.guestPhone, email: body.guestEmail }, rules));
+      }
 
       let table: typeof tables.$inferSelect | undefined;
       if (body.tableId) {
@@ -126,7 +137,15 @@ export default async function reservationsRoutes(app: App) {
       let isOverflow = false;
       let expiresAt: Date | null = null;
 
-      if (table) {
+      if (table && body.source === "walk_in") {
+        // Manual mode's "review every booking" exists for a guest-submitted
+        // table pick the restaurant hasn't seen yet — it has no meaning
+        // here, since a staff member standing at the table IS the review.
+        // Confirming outright is what lets the staff app seat this party
+        // immediately, in every booking mode (proposal §11's /walk-ins
+        // spec: "straight to Seated").
+        status = "confirmed";
+      } else if (table) {
         // A specific, previously-free table was chosen. Whether it is
         // confirmed outright or held pending manual approval, the table is
         // reserved either way — the exclusion constraint on the insert below
