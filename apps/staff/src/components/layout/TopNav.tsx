@@ -13,8 +13,9 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@rms/ui";
 
 import { useRequests } from "../../hooks/use-requests";
-import { useAuthStore } from "../../lib/auth-store";
 import { useLiveClock } from "../../hooks/use-live-clock";
+import { useAuthStore } from "../../lib/auth-store";
+import { ThemeToggle } from "../ThemeToggle";
 
 const NAV_ITEMS = [
   { to: "/today", label: "Today", icon: CalendarClock, badge: false },
@@ -43,6 +44,7 @@ export function TopNav() {
           <p className="text-2xl font-semibold tabular-nums text-ink">
             {now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
           </p>
+          <ThemeToggle />
           <NavLink
             to="/settings"
             aria-label="Device settings"

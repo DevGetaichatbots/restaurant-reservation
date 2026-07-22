@@ -11,17 +11,28 @@
 @import "./tokens.css";
 
 /*
- * Explicit safelist for the semantic status/neutral utilities.
- *
- * These are assembled dynamically — cva's variant objects in Button.tsx,
- * StatusPill's status->class lookup table, conditional ternaries in Calendar
- * and the table map — and empirically, several of them (bg-ink, bg-success,
- * bg-danger, bg-warning, bg-info, bg-warning-subtle, bg-info-subtle) did not
- * reliably survive Tailwind v4's automatic source scanning even though the
- * exact same declaration pattern in theme.css produces bg-primary,
- * bg-secondary, bg-paper etc. without issue. Rather than depend on exactly
- * which dynamic-string shapes the scanner does or doesn't resolve, every
- * color utility this project uses is force-generated here once, explicitly.
+ * Tailwind v4 excludes `node_modules` from its automatic source scan by
+ * default — and every consuming app (booking, admin, staff) reaches this
+ * package's components (Button.tsx, Card.tsx, StatusPill.tsx, ...) through
+ * a pnpm symlink INTO its own node_modules. Without the line below, any
+ * utility class that appears *only* inside this package's .tsx files — and
+ * not also, incidentally, somewhere in the consuming app's own source — is
+ * silently never generated. That's the actual root cause behind what the
+ * inline-safelist comment right below this used to attribute to "flaky
+ * scanning": bg-primary happened to also be typed directly in app pages, so
+ * it worked; bg-danger/px-7/h-[52px] etc. existed only in this package's
+ * components and quietly rendered as nothing. An explicit `@source`
+ * declaration is always honored regardless of the node_modules exclusion,
+ * which only governs automatic detection — this fixes it at the root for
+ * every current and future class this package's components use, in one
+ * place, instead of hand-maintaining a safelist per class.
+ */
+@source "./**/*.{ts,tsx}";
+
+/*
+ * Kept as a second line of defense for the specific status/neutral color
+ * utilities the investigation above was originally chasing — harmless
+ * belt-and-suspenders now that the @source line covers the real cause.
  */
 @source inline("{bg,text,border}-{primary,primary-hover,primary-active,secondary,secondary-hover,accent,paper,paper-2,paper-3,ink,ink-2,ink-3,rule,success,success-subtle,danger,danger-subtle,warning,warning-subtle,info,info-subtle}");
 @source inline("{hover,active,focus-visible}:{bg,text,border}-{primary,primary-hover,primary-active,secondary,secondary-hover,accent,paper,paper-2,paper-3,ink,rule,success,danger,warning,info}");
