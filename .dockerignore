@@ -1,0 +1,21 @@
+# Never send local build artifacts into the Docker build context — a
+# fresh GitHub checkout (what Render actually builds from) never has these,
+# but a local `docker build` run from this machine does, and copying them in
+# silently overwrites the node_modules the Dockerfile's own COPY --from=deps
+# steps placed correctly, with local-machine-specific (often broken) ones.
+node_modules
+**/node_modules
+
+dist
+**/dist
+.next
+**/.next
+.turbo
+**/.turbo
+
+.git
+.env
+.env.*
+!.env.example
+
+*.tsbuildinfo
